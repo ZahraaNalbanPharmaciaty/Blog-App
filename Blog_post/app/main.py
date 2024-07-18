@@ -1,11 +1,11 @@
-'''
+"""
 ********************************************************************
 
 BLOG APPLICATION USING FASTAPI
 Author: Zahraa Nalban
 
 ********************************************************************
-'''
+"""
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session # type: ignore
@@ -47,7 +47,7 @@ async def read_users_me(current_user: schemas.User = Depends(auth.get_current_ac
 #get create post
 @app.post("/posts", response_model= schemas.Post)
 def create_posts(post: schemas.PostCreate,  db: Session = Depends(get_db),current_user: schemas.User = Depends(auth.get_current_active_user)):
-    '''
+    """
         Create user post
 
         Args: 
@@ -57,13 +57,13 @@ def create_posts(post: schemas.PostCreate,  db: Session = Depends(get_db),curren
         
         Return:
             Created post of schemas.Post structure
-    '''
+    """
     return crud.create_posts(db, post = post, current_user=current_user)
 
 #get all posts
 @app.get("/posts", response_model = list[schemas.PostDetails])
 def retrieve_posts(db: Session = Depends(get_db)):
-    '''
+    """
         Retrieve posts from database
         
         Args:
@@ -72,14 +72,14 @@ def retrieve_posts(db: Session = Depends(get_db)):
         Return:
             list of posts in schemas.PostSetails structure
 
-    '''
+    """
     post = crud.get_posts(db)
     return post
 
 #get posts by user
 @app.get("/posts/me", response_model = list[schemas.PostDetails])
 def retrieve_post_by_author(author: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
-    '''
+    """
         Retrieve user's posts from database
 
         Args:
@@ -88,7 +88,7 @@ def retrieve_post_by_author(author: schemas.User = Depends(auth.get_current_acti
 
         Returns:
             List of posts in schemas.PostDetails structure
-    '''
+    """
     post = crud.get_posts_by_author(db, current_user=author)
 
     #if no posts exist, HTTP Exception is raised
@@ -99,7 +99,7 @@ def retrieve_post_by_author(author: schemas.User = Depends(auth.get_current_acti
 #get posts based on tag
 @app.get("/posts/tag/{tag}", response_model = list[schemas.Post])
 def retrieve_post_by_tag(tag: str, db: Session = Depends(get_db)):
-    '''
+    """
         Retrive Posts by tag 
 
         Arg:
@@ -108,7 +108,7 @@ def retrieve_post_by_tag(tag: str, db: Session = Depends(get_db)):
         
         Returns:
             List of posts filtered by tags in schemas.PostDetails structure
-    '''
+    """
     #Store filtered posts
     posts =[] 
 
@@ -128,7 +128,7 @@ def retrieve_post_by_tag(tag: str, db: Session = Depends(get_db)):
 #delete posts by user
 @app.delete("/posts/{id}")
 def delete_post(id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
-    '''
+    """
         Deletes post based on post id
 
         Args:
@@ -137,14 +137,14 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: schemas.Us
         
         Returns:
             Deletes post and returns the deleted post as response
-    '''
+    """
 
     return crud.delete_post(db=db, id=id, current_user=current_user.username)
 
 #update posts
 @app.put("/post/{id}", response_model= schemas.Post)
 def update_post(id: int, post: schemas.PostCreate, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
-    '''
+    """
         Update post based on id
 
         Args:
@@ -155,13 +155,13 @@ def update_post(id: int, post: schemas.PostCreate, db: Session = Depends(get_db)
 
         Returns:
             Updates post and returns the updated post
-    '''
+    """
     return crud.update_post(db=db, id=id, current_user=current_user.username, post=post)
 
 #create user
 @app.post("/users/create")
 def create_user(user: schemas.UserCreate):
-    '''
+    """
         Creates user 
         
         Args:
@@ -169,5 +169,5 @@ def create_user(user: schemas.UserCreate):
 
         Returns:
             Creates user and returns details
-    '''
+    """
     return crud.create_user(user = user)
