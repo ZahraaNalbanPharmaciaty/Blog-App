@@ -13,6 +13,7 @@ from .database import get_db, init_db
 from . import schemas, crud, auth
 from fastapi.security import OAuth2PasswordRequestForm # type: ignore
 from datetime import timedelta
+from typing import Optional
 
 app = FastAPI()
 
@@ -76,6 +77,38 @@ def retrieve_posts(db: Session = Depends(get_db)):
     post = crud.get_posts(db)
     return post
 
+#get posts based on tag
+@app.get("/posts/tag/{tag}", response_model = list[schemas.Post])
+def retrieve_post_by_tag(tag: str, db: Session = Depends(get_db)):
+    """
+        Retrive Posts by tag 
+
+        Arg:
+            tag: category of post
+            db: database session
+        
+        Returns:
+            List of posts filtered by tags in schemas.PostDetails structure
+
+        [FIX] Search by tag is no more case sensitive
+    """
+
+    #Store filtered posts
+    posts =[] 
+
+    #For loop to check each post in the database
+    for post in crud.get_posts(db):
+
+        #Check presence of tag in post's tag
+        #if the tag exists, add it to the list of filtered posts
+        if tag.lower() in post.tags.lower().split(","):
+            posts.append(post)
+
+    # If no posts exist, Not found exception is generated
+    if post ==[]:
+        raise HTTPException(status_code=404, detail="Not found")
+    return posts
+
 #get posts by user
 @app.get("/posts/me", response_model = list[schemas.PostDetails])
 def retrieve_post_by_author(author: schemas.User = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
@@ -95,36 +128,6 @@ def retrieve_post_by_author(author: schemas.User = Depends(auth.get_current_acti
     if post ==[]:
         raise HTTPException(status_code=404, detail="Not found")
     return post
-
-#get posts based on tag
-@app.get("/posts/tag/{tag}", response_model = list[schemas.Post])
-def retrieve_post_by_tag(tag: str, db: Session = Depends(get_db)):
-    """
-        Retrive Posts by tag 
-
-        Arg:
-            tag: category of post
-            db: database session
-        
-        Returns:
-            List of posts filtered by tags in schemas.PostDetails structure
-    """
-    #Store filtered posts
-    posts =[] 
-
-    #For loop to check each post in the database
-    for post in crud.get_posts(db):
-
-        #Check presence of tag in post's tag
-        #if the tag exists, add it to the list of filtered posts
-        if tag in post.tags.split(","):
-            posts.append(post)
-
-    # If no posts exist, Not found exception is generated
-    if post ==[]:
-        raise HTTPException(status_code=404, detail="Not found")
-    return posts
-
 #delete posts by user
 @app.delete("/posts/{id}")
 def delete_post(id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
@@ -137,13 +140,19 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: schemas.Us
         
         Returns:
             Deletes post and returns the deleted post as response
+        
+        [FIX] Only posts by users can be deleted, if the post does not belong to user, not found error will be displayed
     """
+    deleted_post = crud.delete_post(db=db, id=id, current_user=current_user.username)
 
-    return crud.delete_post(db=db, id=id, current_user=current_user.username)
+    #if post does not exist, Not found error will be raised
+    if deleted_post == []: 
+        raise HTTPException(status_code=404,detail="Not found")
+    return deleted_post
 
 #update posts
 @app.put("/post/{id}", response_model= schemas.Post)
-def update_post(id: int, post: schemas.PostCreate, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
+def update_post(id: int, title: str = "", description: str = "", tags: str = "", db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
     """
         Update post based on id
 
@@ -156,11 +165,11 @@ def update_post(id: int, post: schemas.PostCreate, db: Session = Depends(get_db)
         Returns:
             Updates post and returns the updated post
     """
-    return crud.update_post(db=db, id=id, current_user=current_user.username, post=post)
+    return crud.update_post(db=db, id=id, current_user=current_user.username, title=title, description=description, tags=tags)
 
 #create user
 @app.post("/users/create")
-def create_user(user: schemas.UserCreate):
+def create_user(user: schemas.UserCreate, current_user: schemas.User = Depends(auth.get_current_user)):
     """
         Creates user 
         
@@ -170,4 +179,5 @@ def create_user(user: schemas.UserCreate):
         Returns:
             Creates user and returns details
     """
+    
     return crud.create_user(user = user)

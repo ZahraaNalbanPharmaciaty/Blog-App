@@ -1,5 +1,6 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session # type: ignore
 from . import models, schemas, utils, auth
+
 
 #Get active posts from database
 def get_posts(db: Session):
@@ -30,23 +31,27 @@ def delete_post(db: Session, id:int, current_user: dict):
     """
         Delete post by post id
     """
-    db_post = db.query(models.Posts).filter(models.Posts.id == id,models.Posts.author == current_user).first()
+
+    db_post = db.query(models.Posts).filter(models.Posts.id == id,models.Posts.author == current_user).all()
     if db_post:
         db_post.deleted = True
         db.commit()
     return db_post
 
 #Update posts by author
-def update_post(db: Session, id: int, current_user: dict, post: schemas.PostCreate,):
+def update_post(db: Session, id: int, current_user: dict, title: str, description: str, tags: str):
     """
-        Update data post by id
+        Update data post by author based on id
     """
     db_post = db.query(models.Posts).filter(models.Posts.id == id,models.Posts.author == current_user).first()
     if db_post:
-        db_post.title = post.title
-        db_post.description = post.description
-        db_post.URL = utils.convert_title_to_url(db_post.title)
-        db_post.tags = post.tags
+        if title != "":
+            db_post.title = title
+            db_post.URL = utils.convert_title_to_url(db_post.title)
+        if description != "":
+            db_post.description = description
+        if tags != "":
+            db_post.tags = tags
         db.commit()
     return db_post
 
@@ -55,6 +60,7 @@ def create_user(user: schemas.UserCreate):
     """
         Create User
     """
+
     user_db = {
         "username": user.username,
         "full_name": user.full_name,
