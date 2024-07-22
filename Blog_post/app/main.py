@@ -9,7 +9,7 @@ Author: Zahraa Nalban
 
 
 from app.database import init_db
-from .platform import fast_api_app, starlette_app
+from .platform import fast_api_app
 
 app = fast_api_app()
 

@@ -5,21 +5,6 @@ from starlette_admin.exceptions import FormValidationError, LoginFailed
 from sqlalchemy.orm import Session
 
 from app.models.models import User
-users = {
-    "admin": {
-        "name": "Administrator",
-        "avatar": None,
-        "company_logo_url": None,
-        "roles": ["read", "create", "edit", "delete", "action_make_published"],
-    },
-    "johndoe": {
-        "name": "John Doe",
-        "avatar": None,  # user avatar is optional
-        "roles": ["read", "create", "edit", "action_make_published"],
-    },
-    "viewer": {"name": "Viewer", "avatar": None, "roles": ["read"]},
-}
-
 
 class UsernameAndPasswordProvider(AuthProvider):
     """
